@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Flappy Cor-Tech Candy</title>
+    <title>Flappy Cor-Tech HD Optimized</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&display=swap');
 
@@ -18,6 +18,8 @@
             touch-action: none;
             -webkit-user-select: none;
             user-select: none;
+            /* Optimisation curseur */
+            cursor: pointer;
         }
 
         #game-container {
@@ -32,6 +34,8 @@
             display: block;
             width: 100%;
             height: 100%;
+            /* Optimisation rendu */
+            image-rendering: -webkit-optimize-contrast;
         }
 
         /* UI Overlay */
@@ -237,6 +241,9 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
+        // Optimisation Canvas pour Safari
+        ctx.imageSmoothingEnabled = false;
+
         const LOGICAL_WIDTH = 480; 
         const LOGICAL_HEIGHT = 800; 
         let scaleRatio = 1;
@@ -260,6 +267,7 @@
         
         const resetInactivity = () => {
             lastActivityTime = Date.now();
+            unlockAudio(); // Important pour Safari
             if (gameState === 'DEMO') stopDemoMode();
         };
 
@@ -305,13 +313,30 @@
             scaleRatio = canvas.height / LOGICAL_HEIGHT;
             const scaledWidth = LOGICAL_WIDTH * scaleRatio;
             gameOffsetX = (canvas.width - scaledWidth) / 2;
+            
+            // Re-appliquer pour Safari après resize
+            ctx.imageSmoothingEnabled = false;
         }
         window.addEventListener('resize', resize);
         resize();
 
+        // --- AUDIO OPTIMISÉ SAFARI ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
-        function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+        
+        function initAudio() { 
+            if (!audioCtx) {
+                audioCtx = new AudioContext(); 
+            }
+        }
+        
+        // Fonction critique pour Safari: débloquer l'audio au premier contact
+        function unlockAudio() {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
 
         const music = {
             isPlaying: false, scheduler: null, nextNoteTime: 0, noteIndex: 0, tempo: 0.12,
@@ -366,33 +391,30 @@
             
             if (type === 'jump') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(500, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
                 osc.start(); osc.stop(now + 0.1);
             } else if (type === 'hit') {
                 osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
-                gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
                 osc.start(); osc.stop(now + 0.3);
             } else if (type === 'score') {
                 osc.type = 'square'; osc.frequency.setValueAtTime(1000, now); osc.frequency.setValueAtTime(1500, now + 0.05);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                gain.gain.setValueAtTime(0.08, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
                 osc.start(); osc.stop(now + 0.15);
             } else if (type === 'bonus_score') {
-                // Son magique
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(1200, now + 0.2);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
                 osc.start(); osc.stop(now + 0.3);
             } else if (type === 'bonus_shield') {
-                // Son Power Up grave
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now + 0.3);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
                 osc.start(); osc.stop(now + 0.3);
             } else if (type === 'shield_break') {
-                // Son de vitre qui casse
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
                 osc.start(); osc.stop(now + 0.1);
             }
         }
@@ -428,7 +450,6 @@
         }
 
         // --- ENTITIES ---
-        
         const ground = {
             height: 80, x: 0,
             draw: function() {
@@ -450,10 +471,7 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
-                // Effet Invulnérabilité (clignotement)
-                if (this.invulnerable > 0 && Math.floor(frames / 4) % 2 === 0) {
-                    ctx.globalAlpha = 0.5;
-                }
+                if (this.invulnerable > 0 && Math.floor(frames / 4) % 2 === 0) { ctx.globalAlpha = 0.5; }
 
                 let rot = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.08)));
                 ctx.rotate(rot);
@@ -470,7 +488,6 @@
 
                 ctx.restore();
                 
-                // Dessin du Bouclier
                 if (this.hasShield) {
                     ctx.save();
                     ctx.translate(this.x, this.y);
@@ -486,25 +503,17 @@
             },
             update: function() {
                 if (this.invulnerable > 0) this.invulnerable--;
-
                 if (gameState === 'DEMO') {
                     let nextPipe = pipes.items.find(p => p.x + pipes.width > this.x);
                     let targetY = nextPipe ? nextPipe.top + (pipes.gap / 2) : 300;
                     if (this.y > targetY + 20) this.jump();
                 }
-
                 this.velocity += this.gravity;
                 this.y += this.velocity;
                 
-                // Collision Sol
                 if (this.y + this.radius >= LOGICAL_HEIGHT - ground.height) { 
                     this.y = LOGICAL_HEIGHT - ground.height - this.radius; 
-                    if (gameState === 'DEMO') {
-                        resetGameEnv(); gameState = 'DEMO'; 
-                    } else {
-                        // Sol tue instantanément, même avec bouclier (choix de design)
-                        gameOver();
-                    }
+                    if (gameState === 'DEMO') { resetGameEnv(); gameState = 'DEMO'; } else { gameOver(); }
                 }
                 if (this.y - this.radius <= 0) { this.y = this.radius; this.velocity = 0; }
             },
@@ -513,100 +522,57 @@
                 particles.push(new Particle(this.x, this.y + 15, 'smoke'), new Particle(this.x-10, this.y+15, 'smoke'));
             },
             breakShield: function() {
-                this.hasShield = false;
-                this.invulnerable = 60; // 1 seconde d'invulnérabilité (à 60fps)
-                playSound('shield_break');
-                shakeAmount = 10;
-                // Particules de bouclier cassé
+                this.hasShield = false; this.invulnerable = 60; playSound('shield_break'); shakeAmount = 10;
                 for(let k=0; k<10; k++) particles.push(new Particle(this.x, this.y, 'shield_break'));
             }
         };
 
         const bonuses = {
-            items: [],
-            spawnRate: 200, // Apparaît moins souvent que les tuyaux
-            
+            items: [], spawnRate: 200, 
             reset: function() { this.items = []; },
-            
             draw: function() {
                 for (let i = 0; i < this.items.length; i++) {
                     let b = this.items[i];
-                    // Animation flottante
                     let floatY = b.y + Math.sin(frames * 0.1) * 5;
-                    
                     ctx.save();
                     ctx.translate(b.x, floatY);
-                    
                     if (b.type === 'score') {
-                        // SUCETTE
-                        // Baton
                         ctx.fillStyle = '#EEE'; ctx.fillRect(-2, 0, 4, 30);
-                        // Bonbon
                         ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fillStyle = '#F06292'; ctx.fill();
-                        // Spirale
                         ctx.strokeStyle = '#FFF'; ctx.lineWidth = 3; ctx.beginPath();
-                        for(let r=0; r<15; r+=2) {
-                            ctx.arc(0, 0, r, 0, Math.PI + (r/2)); 
-                        }
+                        for(let r=0; r<15; r+=2) ctx.arc(0, 0, r, 0, Math.PI + (r/2)); 
                         ctx.stroke();
                     } else if (b.type === 'shield') {
-                        // COEUR
-                        ctx.scale(1.2, 1.2);
-                        ctx.fillStyle = '#FF1744';
-                        ctx.beginPath();
-                        ctx.moveTo(0, 5);
-                        ctx.bezierCurveTo(5, -5, 15, -5, 0, 15);
-                        ctx.moveTo(0, 5);
-                        ctx.bezierCurveTo(-5, -5, -15, -5, 0, 15);
-                        ctx.fill();
-                        // Reflet
-                        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                        ctx.beginPath(); ctx.arc(-4, 0, 3, 0, Math.PI*2); ctx.fill();
+                        ctx.scale(1.2, 1.2); ctx.fillStyle = '#FF1744';
+                        ctx.beginPath(); ctx.moveTo(0, 5); ctx.bezierCurveTo(5, -5, 15, -5, 0, 15);
+                        ctx.moveTo(0, 5); ctx.bezierCurveTo(-5, -5, -15, -5, 0, 15); ctx.fill();
+                        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(-4, 0, 3, 0, Math.PI*2); ctx.fill();
                     }
-                    
                     ctx.restore();
                 }
             },
-            
             update: function() {
-                // Spawn
-                if (frames % this.spawnRate === 0 && frames > 100) { // Pas au tout début
-                    // Chance: 70% Score, 30% Shield
+                if (frames % this.spawnRate === 0 && frames > 100) { 
                     let type = Math.random() > 0.3 ? 'score' : 'shield';
-                    // Positionner entre les tuyaux (hauteur aléatoire)
                     let yPos = 150 + Math.random() * (LOGICAL_HEIGHT - 300);
                     this.items.push({ x: LOGICAL_WIDTH + 50, y: yPos, type: type, w: 30, h: 30 });
                 }
-                
                 for (let i = 0; i < this.items.length; i++) {
                     let b = this.items[i];
-                    b.x -= pipes.dx; // Bouge à la même vitesse
-                    
-                    // Collision Cercle (Player) vs Cercle (Bonus approx)
+                    b.x -= pipes.dx; 
                     let dist = Math.hypot(player.x - b.x, player.y - b.y);
                     if (dist < player.radius + 15) {
-                        // COLLECTÉ !
                         if (b.type === 'score') {
-                            score += 5;
-                            playSound('bonus_score');
-                            scoreEl.innerText = score;
+                            score += 5; playSound('bonus_score'); scoreEl.innerText = score;
                             scoreEl.classList.remove('score-pop'); void scoreEl.offsetWidth; scoreEl.classList.add('score-pop');
                             for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
                         } else if (b.type === 'shield') {
-                            player.hasShield = true;
-                            playSound('bonus_shield');
+                            player.hasShield = true; playSound('bonus_shield');
                             for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
                         }
-                        
-                        this.items.splice(i, 1);
-                        i--;
-                        continue;
+                        this.items.splice(i, 1); i--; continue;
                     }
-                    
-                    if (b.x < -50) {
-                        this.items.splice(i, 1);
-                        i--;
-                    }
+                    if (b.x < -50) { this.items.splice(i, 1); i--; }
                 }
             }
         };
@@ -615,19 +581,26 @@
             items: [], width: 80, gap: 180, dx: 3.5, spawnRate: 90, 
             reset: function() { this.items = []; },
             draw: function() {
+                // OPTIMISATION SAFARI: Pas de ctx.clip(), calcul mathématique simple
                 for (let i = 0; i < this.items.length; i++) {
                     let p = this.items[i];
                     const stripeHeight = 30;
+                    
                     const drawPipe = (x, yStart, w, h, isTop) => {
                         ctx.save();
+                        // Fond blanc
                         ctx.fillStyle = '#FFF'; ctx.fillRect(x, yStart, w, h);
+                        
+                        // Rayures optimisées (Pas de clip)
+                        ctx.fillStyle = '#FF1744';
                         for (let sy = yStart; sy < yStart + h; sy += stripeHeight) {
                             if (Math.floor((sy - yStart) / stripeHeight) % 2 === 0) {
-                                ctx.fillStyle = '#FF1744'; 
+                                // Calcul pour ne pas dépasser le bas du tuyau
                                 let bandH = Math.min(stripeHeight, (yStart + h) - sy);
                                 ctx.fillRect(x, sy, w, bandH);
                             }
                         }
+                        
                         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(x + 8, yStart, 12, h); 
                         ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeRect(x, yStart, w, h);
                         ctx.fillStyle = '#263238';
@@ -635,6 +608,7 @@
                         ctx.fillRect(x-6, capY, w+12, 18); ctx.strokeRect(x-6, capY, w+12, 18);
                         ctx.restore();
                     };
+                    
                     drawPipe(p.x, 0, this.width, p.top, true);
                     let bottomY = LOGICAL_HEIGHT - ground.height - p.bottom;
                     drawPipe(p.x, bottomY, this.width, p.bottom, false);
@@ -658,18 +632,10 @@
                     if (bh.x < p.x + this.width && bh.x + bh.w > p.x && bh.y + bh.h > LOGICAL_HEIGHT - ground.height - p.bottom) hit = true;
                     
                     if (hit) {
-                        if (gameState === 'DEMO') {
-                            resetGameEnv(); gameState = 'DEMO';
-                        } else {
-                            if (player.invulnerable > 0) {
-                                // Ignore hit
-                            } else if (player.hasShield) {
-                                player.breakShield();
-                                // Optionnel : repousser un peu l'avion ou détruire le tuyau?
-                                // Pour simplifier, on passe à travers avec invulnérabilité
-                            } else {
-                                gameOver();
-                            }
+                        if (gameState === 'DEMO') { resetGameEnv(); gameState = 'DEMO'; } else {
+                            if (player.invulnerable > 0) {} 
+                            else if (player.hasShield) { player.breakShield(); } 
+                            else { gameOver(); }
                         }
                     }
                     
