@@ -314,7 +314,7 @@
         let frames = 0;
         let score = 0;
         let gameState = 'START';
-        let gameSpeed = 3; 
+        // gameSpeed n'est plus utilisé directement, on utilise pipes.dx pour tout synchroniser
         let isHighscoreInputActive = false;
         
         let shakeAmount = 0;
@@ -464,7 +464,8 @@
                 ctx.fillStyle = '#66BB6A'; ctx.fillRect(0, LOGICAL_HEIGHT - this.height, LOGICAL_WIDTH, this.height);
                 ctx.fillStyle = '#43A047'; ctx.fillRect(0, LOGICAL_HEIGHT - this.height, LOGICAL_WIDTH, 15);
                 ctx.fillStyle = '#fff';
-                this.x = (this.x - gameSpeed) % 60;
+                // Synchronisé avec pipes.dx
+                this.x = (this.x - pipes.dx) % 60;
                 for(let i = 0; i < LOGICAL_WIDTH; i+=60) ctx.fillRect(i + (this.x % 60), LOGICAL_HEIGHT - 25, 30, 8);
             }
         };
@@ -572,6 +573,8 @@
                             score += 5; playSound('bonus_score'); scoreEl.innerText = score;
                             scoreEl.classList.remove('score-pop'); void scoreEl.offsetWidth; scoreEl.classList.add('score-pop');
                             for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
+                            // Les bonus de score augmentent aussi la difficulté !
+                            if (score % 5 === 0) { pipes.dx = Math.min(pipes.dx + 0.3, 8); }
                         } else if (b.type === 'shield') {
                             player.hasShield = true; playSound('bonus_shield');
                             for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
@@ -651,6 +654,13 @@
                             scoreEl.classList.remove('score-pop'); void scoreEl.offsetWidth; scoreEl.classList.add('score-pop');
                             playSound('score'); flashOpacity = 0.5;
                             for(let k=0; k<15; k++) particles.push(new Particle(player.x, player.y - 50, 'score'));
+                            
+                            // DIFFICULTY PROGRESSION
+                            // Augmentation de la vitesse tous les 5 points
+                            if (score % 5 === 0) {
+                                // On cap la vitesse max à 8 pour que ce soit jouable
+                                this.dx = Math.min(this.dx + 0.2, 8);
+                            }
                         }
                         p.passed = true; 
                     }
@@ -682,7 +692,8 @@
             },
             update: function() {
                 this.clouds.forEach(c => {
-                    c.x -= 0.5 * c.s;
+                    // Les nuages accélèrent aussi légèrement avec la difficulté
+                    c.x -= pipes.dx * 0.15 * c.s;
                     if(c.x < -150) c.x = LOGICAL_WIDTH + 150; 
                 });
             }
@@ -722,7 +733,9 @@
 
         function resetGameEnv() {
             player.y = 300; player.velocity = 0; player.hasShield = false; player.invulnerable = 0;
-            pipes.reset(); bonuses.reset();
+            pipes.reset(); 
+            pipes.dx = 3.5; // Reset vitesse normale au début
+            bonuses.reset();
             score = 0; frames = 0; particles = [];
             scoreEl.innerText = score; gameState = 'START';
             scoreEl.style.display = 'block'; scoreEl.classList.remove('score-pop');
