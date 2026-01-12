@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Flappy Cor-Tech HD</title>
+    <title>Flappy Cor-Tech Candy</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&display=swap');
 
@@ -16,7 +16,6 @@
             overflow: hidden;
             font-family: 'Press Start 2P', cursive;
             touch-action: none;
-            /* Empêcher la sélection sur mobile */
             -webkit-user-select: none;
             user-select: none;
         }
@@ -35,7 +34,7 @@
             height: 100%;
         }
 
-        /* UI Overlay - Responsive via Flexbox */
+        /* UI Overlay */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -49,14 +48,13 @@
             z-index: 10;
         }
 
-        /* Conteneur central pour l'UI, contraint en largeur pour ne pas être trop large sur PC */
         .ui-center {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
-            max-width: 500px; /* Max largeur UI */
+            max-width: 500px;
             padding: 20px;
         }
 
@@ -73,10 +71,9 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Titre Responsive */
         h1 {
             font-family: 'Fredoka One', cursive;
-            font-size: clamp(2.5rem, 8vw, 4rem); /* Taille adaptative */
+            font-size: clamp(2.5rem, 8vw, 4rem);
             margin-bottom: 2vh;
             color: #FFEB3B;
             -webkit-text-stroke: 2px #000;
@@ -107,9 +104,8 @@
             transition: transform 0.1s;
         }
 
-        .score-pop { transform: scale(1.5); color: #FFEB3B !important; }
+        .score-pop { transform: scale(1.5); color: #FF4081 !important; }
 
-        /* Indicateur Mode Démo */
         #demo-indicator {
             position: absolute;
             bottom: 5vh;
@@ -125,8 +121,6 @@
             pointer-events: none;
         }
 
-        /* --- MENUS & BOUTONS RESPONSIVE --- */
-        
         .menu-btn {
             font-family: 'Press Start 2P', cursive;
             background: #FFEB3B;
@@ -145,14 +139,11 @@
         }
 
         .menu-btn:active { box-shadow: 0 0.2rem 0 #F57F17; transform: translateY(0.3rem); }
-
         .menu-btn.primary { background: #00E676; box-shadow: 0 0.5rem 0 #00aa55; }
         .menu-btn.primary:active { box-shadow: 0 0.2rem 0 #00aa55; }
-
         .menu-btn.secondary { background: #FFF; box-shadow: 0 0.5rem 0 #ccc; }
         .menu-btn.secondary:active { box-shadow: 0 0.2rem 0 #ccc; }
 
-        /* Leaderboard Modal */
         #leaderboard-screen {
             background: rgba(0,0,0,0.85);
             padding: 30px;
@@ -164,7 +155,6 @@
         }
 
         .leaderboard-box { width: 100%; margin-bottom: 20px; }
-
         .leaderboard-row {
             display: flex;
             justify-content: space-between;
@@ -174,10 +164,8 @@
             border-bottom: 2px dotted #555;
             padding-bottom: 5px;
         }
-        
         .leaderboard-row:first-child { color: #FFEB3B; font-weight: bold; }
 
-        /* Input */
         #new-record-section { display: none; margin-bottom: 15px; width: 100%; flex-direction:column; align-items:center;}
         input[type="text"] {
             font-family: 'Press Start 2P', cursive;
@@ -193,9 +181,9 @@
             margin-bottom: 10px;
         }
         
-        .blink { animation: blinker 0.8s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .blink { animation: blinker 0.8s linear infinite; }
 
     </style>
 </head>
@@ -209,7 +197,6 @@
         <div id="ui-layer">
             <div class="ui-center">
                 
-                <!-- ECRAN ACCUEIL -->
                 <div id="start-screen" class="message" style="display: flex;">
                     <h1>FLAPPY<br>COR-TECH</h1>
                     <p class="blink" style="font-size: clamp(0.6rem, 2vw, 0.8rem); color:#fff; text-shadow:2px 2px 0 #000; margin-bottom: 3vh;">
@@ -218,7 +205,6 @@
                     <button id="btn-show-scores" class="menu-btn">🏆 CLASSEMENT</button>
                 </div>
                 
-                <!-- ECRAN CLASSEMENT (Masqué par défaut) -->
                 <div id="leaderboard-screen" class="message">
                     <h2 style="color:#FFEB3B; margin-bottom:2vh; font-family:'Fredoka One'; font-size: 2rem; -webkit-text-stroke: 1px #000;">TOP PILOTES</h2>
                     <div class="leaderboard-box">
@@ -227,7 +213,6 @@
                     <button id="btn-back-home" class="menu-btn secondary">⬅ RETOUR</button>
                 </div>
                 
-                <!-- ECRAN GAME OVER -->
                 <div id="game-over-screen" class="message">
                     <h1 style="color: #FF5252;">BOOM !</h1>
                     <div style="font-size: 1.5rem; margin-bottom: 2vh; font-family:'Fredoka One';">Score: <span id="final-score" style="color:#FFEB3B">0</span></div>
@@ -252,14 +237,11 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        // --- CONSTANTES LOGIQUES (Le monde virtuel) ---
-        // On garde une logique "verticale" de base pour les calculs de physique
         const LOGICAL_WIDTH = 480; 
-        const LOGICAL_HEIGHT = 800; // Ratio proche de 16:9
+        const LOGICAL_HEIGHT = 800; 
         let scaleRatio = 1;
-        let gameOffsetX = 0; // Pour centrer le jeu si l'écran est large
+        let gameOffsetX = 0;
         
-        // --- UI REFS ---
         const scoreEl = document.getElementById('score-display');
         const startScreen = document.getElementById('start-screen');
         const leaderboardScreen = document.getElementById('leaderboard-screen');
@@ -270,25 +252,18 @@
         const newRecordSection = document.getElementById('new-record-section');
         const playerNameInput = document.getElementById('player-name');
         
-        // Boutons
         const btnShowScores = document.getElementById('btn-show-scores');
         const btnBackHome = document.getElementById('btn-back-home');
         const btnSave = document.getElementById('btn-save');
         const btnReplay = document.getElementById('btn-replay');
         const btnHomeFromOver = document.getElementById('btn-home-from-over');
         
-        // --- NAVIGATION & INPUTS ---
-        
         const resetInactivity = () => {
             lastActivityTime = Date.now();
             if (gameState === 'DEMO') stopDemoMode();
         };
 
-        const stopPropagation = (e) => {
-            e.stopPropagation();
-            // Sur mobile, le touchstart peut trigger un click fantôme, on le gère
-            // Mais ici on utilise e.stopPropagation() sur les events spécifiques
-        };
+        const stopPropagation = (e) => { e.stopPropagation(); };
 
         btnShowScores.addEventListener('click', (e) => { stopPropagation(e); resetInactivity(); startScreen.style.display = 'none'; leaderboardScreen.style.display = 'flex'; });
         btnBackHome.addEventListener('click', (e) => { stopPropagation(e); resetInactivity(); leaderboardScreen.style.display = 'none'; startScreen.style.display = 'flex'; });
@@ -308,11 +283,10 @@
         
         btnReplay.addEventListener('click', (e) => { stopPropagation(e); resetInactivity(); gameOverScreen.style.display = 'none'; startGame(); });
 
-        // --- GAME VARIABLES ---
         let frames = 0;
         let score = 0;
         let gameState = 'START';
-        let gameSpeed = 3; // Ajusté pour la HD
+        let gameSpeed = 3; 
         let isHighscoreInputActive = false;
         
         let shakeAmount = 0;
@@ -325,35 +299,16 @@
             {name: "PRO", score: 20}, {name: "DUCK", score: 10}, {name: "COR", score: 5}, {name: "TECH", score: 3}, {name: "NOOB", score: 1}
         ];
 
-        // --- RESIZING & SCALING ENGINE ---
-        
         function resize() {
-            // 1. Le Canvas prend toute la fenêtre (Résolution native)
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-
-            // 2. Calcul du facteur d'échelle
-            // On se base sur la hauteur pour que le jeu "fit" toujours verticalement
-            // Si l'écran est très large (PC), on aura des bandes (ou du décor étendu) sur les côtés
             scaleRatio = canvas.height / LOGICAL_HEIGHT;
-            
-            // 3. Calcul de l'offset X pour centrer le jeu logique
-            // La largeur logique effective une fois scalée
             const scaledWidth = LOGICAL_WIDTH * scaleRatio;
             gameOffsetX = (canvas.width - scaledWidth) / 2;
         }
-
         window.addEventListener('resize', resize);
-        // Appel initial
         resize();
 
-        // --- HELPERS DESSIN ---
-        
-        // Convertit les coordonées Logiques en Physiques
-        // Utile si on veut savoir où dessiner précisément
-        // Mais on va surtout utiliser ctx.transform
-        
-        // --- AUDIO ENGINE ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
@@ -408,6 +363,7 @@
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
+            
             if (type === 'jump') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(500, now + 0.1);
                 gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
@@ -420,10 +376,27 @@
                 osc.type = 'square'; osc.frequency.setValueAtTime(1000, now); osc.frequency.setValueAtTime(1500, now + 0.05);
                 gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
                 osc.start(); osc.stop(now + 0.15);
+            } else if (type === 'bonus_score') {
+                // Son magique
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(1200, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'bonus_shield') {
+                // Son Power Up grave
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'shield_break') {
+                // Son de vitre qui casse
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
             }
         }
 
-        // --- PARTICLES ---
         class Particle {
             constructor(x, y, type) {
                 this.x = x; this.y = y; this.type = type;
@@ -431,15 +404,18 @@
                 if (type === 'smoke') {
                     this.vx = (Math.random() - 0.5) * 1; this.vy = (Math.random() * 1) + 1; 
                     this.size = Math.random() * 4 + 2; this.color = `rgba(255, 255, 255,`; this.decay = 0.03;
-                } else if (type === 'score') {
+                } else if (type === 'score' || type === 'bonus') {
                     this.vx = (Math.random() - 0.5) * 10; this.vy = (Math.random() - 0.5) * 10;
                     this.size = Math.random() * 5 + 3;
-                    const colors = ['#FFEB3B', '#FF5252', '#00E676', '#40C4FF'];
+                    const colors = ['#FFEB3B', '#FF4081', '#00E676', '#40C4FF', '#E040FB'];
                     this.colorStr = colors[Math.floor(Math.random() * colors.length)];
                     this.decay = 0.02;
                 } else if (type === 'explode') {
                     this.vx = (Math.random() - 0.5) * 15; this.vy = (Math.random() - 0.5) * 15;
                     this.size = Math.random() * 8 + 4; this.colorStr = '#FF5252'; this.decay = 0.05;
+                } else if (type === 'shield_break') {
+                    this.vx = (Math.random() - 0.5) * 8; this.vy = (Math.random() - 0.5) * 8;
+                    this.size = Math.random() * 4 + 2; this.colorStr = '#00E676'; this.decay = 0.05;
                 }
             }
             update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; if(this.type === 'smoke') this.size += 0.2; }
@@ -451,54 +427,67 @@
             }
         }
 
-        // --- ENTITIES (Defined in Logical Space 480x800) ---
+        // --- ENTITIES ---
         
         const ground = {
             height: 80, x: 0,
             draw: function() {
-                // Le sol doit être dessiné pour couvrir toute la largeur de l'écran (physique)
-                // Donc on doit "casser" la transformation logique pour le dessin
-                // Ou dessiner très large.
-                // OPTION SIMPLE : Dessiner de -gameOffsetX/scaleRatio à LargeurMax
-                
                 const drawX = -gameOffsetX / scaleRatio;
                 const drawWidth = canvas.width / scaleRatio;
-
                 ctx.fillStyle = '#66BB6A'; ctx.fillRect(drawX, LOGICAL_HEIGHT - this.height, drawWidth, this.height);
                 ctx.fillStyle = '#43A047'; ctx.fillRect(drawX, LOGICAL_HEIGHT - this.height, drawWidth, 15);
                 ctx.fillStyle = '#fff';
-                
                 this.x = (this.x - gameSpeed) % 60;
-                // Dessiner le damier seulement dans la zone de jeu pour l'effet visuel
                 for(let i = drawX; i < drawWidth + drawX; i+=60) ctx.fillRect(i + (this.x % 60), LOGICAL_HEIGHT - 25, 30, 8);
             }
         };
 
         const player = {
-            x: 100, y: 300, radius: 22, velocity: 0, gravity: 0.35, jumpStrength: 7.5, // Physique ajustée pour 800px height
+            x: 100, y: 300, radius: 22, velocity: 0, gravity: 0.35, jumpStrength: 7.5, 
+            hasShield: false, invulnerable: 0,
+            
             draw: function() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+                
+                // Effet Invulnérabilité (clignotement)
+                if (this.invulnerable > 0 && Math.floor(frames / 4) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+
                 let rot = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.08)));
                 ctx.rotate(rot);
 
-                // Dessin vectoriel
-                ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.moveTo(-18, 4); ctx.lineTo(-32, -8); ctx.lineTo(-32, 8); ctx.fill(); // Aile arrière
-                ctx.fillStyle = '#FF5252'; ctx.beginPath(); ctx.ellipse(0, 8, 32, 18, 0, 0, Math.PI * 2); ctx.fill(); // Corps
+                ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.moveTo(-18, 4); ctx.lineTo(-32, -8); ctx.lineTo(-32, 8); ctx.fill(); 
+                ctx.fillStyle = '#FF5252'; ctx.beginPath(); ctx.ellipse(0, 8, 32, 18, 0, 0, Math.PI * 2); ctx.fill(); 
                 ctx.lineWidth=3; ctx.strokeStyle='white'; ctx.stroke(); 
-                ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.arc(0, -6, 14, 0, Math.PI * 2); ctx.fill(); // Tête
-                ctx.fillStyle = '#FF9800'; ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(26, -2); ctx.lineTo(12, 6); ctx.fill(); // Bec
-                ctx.fillStyle = '#333'; ctx.fillRect(-14, -8, 28, 4); // Lunette strap
-                ctx.fillStyle = '#4FC3F7'; ctx.beginPath(); ctx.arc(6, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Verre
-                ctx.fillStyle = '#D32F2F'; ctx.beginPath(); ctx.ellipse(-4, 12, 20, 8, 0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // Aile avant
-                ctx.fillStyle = '#EEE'; if (frames % 4 === 0) ctx.fillRect(28, -12, 3, 36); else ctx.fillRect(28, 4, 3, 6); // Hélice
+                ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.arc(0, -6, 14, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillStyle = '#FF9800'; ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(26, -2); ctx.lineTo(12, 6); ctx.fill(); 
+                ctx.fillStyle = '#333'; ctx.fillRect(-14, -8, 28, 4); 
+                ctx.fillStyle = '#4FC3F7'; ctx.beginPath(); ctx.arc(6, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                ctx.fillStyle = '#D32F2F'; ctx.beginPath(); ctx.ellipse(-4, 12, 20, 8, 0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); 
+                ctx.fillStyle = '#EEE'; if (frames % 4 === 0) ctx.fillRect(28, -12, 3, 36); else ctx.fillRect(28, 4, 3, 6); 
 
                 ctx.restore();
+                
+                // Dessin du Bouclier
+                if (this.hasShield) {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.globalAlpha = 0.4 + Math.sin(frames * 0.1) * 0.1;
+                    ctx.fillStyle = '#00E676';
+                    ctx.beginPath(); ctx.arc(0, 0, this.radius + 15, 0, Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = '#69F0AE'; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.restore();
+                }
+
+                ctx.globalAlpha = 1.0;
                 if(frames % 5 === 0 && (gameState === 'PLAYING' || gameState === 'DEMO')) particles.push(new Particle(this.x - 30, this.y + 8, 'smoke'));
             },
             update: function() {
+                if (this.invulnerable > 0) this.invulnerable--;
+
                 if (gameState === 'DEMO') {
-                    // IA Simple
                     let nextPipe = pipes.items.find(p => p.x + pipes.width > this.x);
                     let targetY = nextPipe ? nextPipe.top + (pipes.gap / 2) : 300;
                     if (this.y > targetY + 20) this.jump();
@@ -506,20 +495,124 @@
 
                 this.velocity += this.gravity;
                 this.y += this.velocity;
+                
+                // Collision Sol
                 if (this.y + this.radius >= LOGICAL_HEIGHT - ground.height) { 
                     this.y = LOGICAL_HEIGHT - ground.height - this.radius; 
-                    gameState === 'DEMO' ? resetGameEnv() : gameOver();
+                    if (gameState === 'DEMO') {
+                        resetGameEnv(); gameState = 'DEMO'; 
+                    } else {
+                        // Sol tue instantanément, même avec bouclier (choix de design)
+                        gameOver();
+                    }
                 }
                 if (this.y - this.radius <= 0) { this.y = this.radius; this.velocity = 0; }
             },
             jump: function() { 
                 this.velocity = -this.jumpStrength; playSound('jump');
                 particles.push(new Particle(this.x, this.y + 15, 'smoke'), new Particle(this.x-10, this.y+15, 'smoke'));
+            },
+            breakShield: function() {
+                this.hasShield = false;
+                this.invulnerable = 60; // 1 seconde d'invulnérabilité (à 60fps)
+                playSound('shield_break');
+                shakeAmount = 10;
+                // Particules de bouclier cassé
+                for(let k=0; k<10; k++) particles.push(new Particle(this.x, this.y, 'shield_break'));
+            }
+        };
+
+        const bonuses = {
+            items: [],
+            spawnRate: 200, // Apparaît moins souvent que les tuyaux
+            
+            reset: function() { this.items = []; },
+            
+            draw: function() {
+                for (let i = 0; i < this.items.length; i++) {
+                    let b = this.items[i];
+                    // Animation flottante
+                    let floatY = b.y + Math.sin(frames * 0.1) * 5;
+                    
+                    ctx.save();
+                    ctx.translate(b.x, floatY);
+                    
+                    if (b.type === 'score') {
+                        // SUCETTE
+                        // Baton
+                        ctx.fillStyle = '#EEE'; ctx.fillRect(-2, 0, 4, 30);
+                        // Bonbon
+                        ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fillStyle = '#F06292'; ctx.fill();
+                        // Spirale
+                        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 3; ctx.beginPath();
+                        for(let r=0; r<15; r+=2) {
+                            ctx.arc(0, 0, r, 0, Math.PI + (r/2)); 
+                        }
+                        ctx.stroke();
+                    } else if (b.type === 'shield') {
+                        // COEUR
+                        ctx.scale(1.2, 1.2);
+                        ctx.fillStyle = '#FF1744';
+                        ctx.beginPath();
+                        ctx.moveTo(0, 5);
+                        ctx.bezierCurveTo(5, -5, 15, -5, 0, 15);
+                        ctx.moveTo(0, 5);
+                        ctx.bezierCurveTo(-5, -5, -15, -5, 0, 15);
+                        ctx.fill();
+                        // Reflet
+                        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                        ctx.beginPath(); ctx.arc(-4, 0, 3, 0, Math.PI*2); ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                }
+            },
+            
+            update: function() {
+                // Spawn
+                if (frames % this.spawnRate === 0 && frames > 100) { // Pas au tout début
+                    // Chance: 70% Score, 30% Shield
+                    let type = Math.random() > 0.3 ? 'score' : 'shield';
+                    // Positionner entre les tuyaux (hauteur aléatoire)
+                    let yPos = 150 + Math.random() * (LOGICAL_HEIGHT - 300);
+                    this.items.push({ x: LOGICAL_WIDTH + 50, y: yPos, type: type, w: 30, h: 30 });
+                }
+                
+                for (let i = 0; i < this.items.length; i++) {
+                    let b = this.items[i];
+                    b.x -= pipes.dx; // Bouge à la même vitesse
+                    
+                    // Collision Cercle (Player) vs Cercle (Bonus approx)
+                    let dist = Math.hypot(player.x - b.x, player.y - b.y);
+                    if (dist < player.radius + 15) {
+                        // COLLECTÉ !
+                        if (b.type === 'score') {
+                            score += 5;
+                            playSound('bonus_score');
+                            scoreEl.innerText = score;
+                            scoreEl.classList.remove('score-pop'); void scoreEl.offsetWidth; scoreEl.classList.add('score-pop');
+                            for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
+                        } else if (b.type === 'shield') {
+                            player.hasShield = true;
+                            playSound('bonus_shield');
+                            for(let k=0; k<10; k++) particles.push(new Particle(b.x, b.y, 'bonus'));
+                        }
+                        
+                        this.items.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    
+                    if (b.x < -50) {
+                        this.items.splice(i, 1);
+                        i--;
+                    }
+                }
             }
         };
 
         const pipes = {
-            items: [], width: 80, gap: 180, dx: 3.5, spawnRate: 90, // Ajusté pour HD
+            items: [], width: 80, gap: 180, dx: 3.5, spawnRate: 90, 
             reset: function() { this.items = []; },
             draw: function() {
                 for (let i = 0; i < this.items.length; i++) {
@@ -535,7 +628,7 @@
                                 ctx.fillRect(x, sy, w, bandH);
                             }
                         }
-                        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(x + 8, yStart, 12, h); // Glossy
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(x + 8, yStart, 12, h); 
                         ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeRect(x, yStart, w, h);
                         ctx.fillStyle = '#263238';
                         let capY = isTop ? yStart + h - 18 : yStart;
@@ -557,7 +650,6 @@
                 for (let i = 0; i < this.items.length; i++) {
                     let p = this.items[i];
                     p.x -= this.dx;
-                    // AABB Collision (Box un peu plus indulgente)
                     const padding = 5;
                     const bh = { x: player.x - player.radius + padding, y: player.y - player.radius + padding, w: (player.radius*2) - padding*2, h: (player.radius*2) - padding*2 };
                     
@@ -565,7 +657,21 @@
                     if (bh.x < p.x + this.width && bh.x + bh.w > p.x && bh.y < p.top) hit = true;
                     if (bh.x < p.x + this.width && bh.x + bh.w > p.x && bh.y + bh.h > LOGICAL_HEIGHT - ground.height - p.bottom) hit = true;
                     
-                    if (hit) gameState === 'DEMO' ? resetGameEnv() : gameOver();
+                    if (hit) {
+                        if (gameState === 'DEMO') {
+                            resetGameEnv(); gameState = 'DEMO';
+                        } else {
+                            if (player.invulnerable > 0) {
+                                // Ignore hit
+                            } else if (player.hasShield) {
+                                player.breakShield();
+                                // Optionnel : repousser un peu l'avion ou détruire le tuyau?
+                                // Pour simplifier, on passe à travers avec invulnérabilité
+                            } else {
+                                gameOver();
+                            }
+                        }
+                    }
                     
                     if (p.x + this.width < player.x && !p.passed) { 
                         if (gameState !== 'DEMO') {
@@ -585,19 +691,15 @@
             clouds: [],
             init: function() { this.clouds = [{x: 50, y: 100, s: 1.2}, {x: 300, y: 200, s: 0.8}, {x: 500, y: 80, s: 1}]; },
             draw: function() {
-                // Fond sur TOUT l'écran physique
-                // On annule la scale courante pour dessiner le background full screen
                 ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+                ctx.setTransform(1, 0, 0, 1, 0, 0); 
                 let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 grad.addColorStop(0, '#4FC3F7'); grad.addColorStop(1, '#B3E5FC'); 
                 ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width, canvas.height);
-                ctx.restore(); // Retour au monde logique
+                ctx.restore(); 
 
-                // Nuages dans le monde logique (mais on peut les faire déborder)
                 ctx.fillStyle = 'rgba(255,255,255,0.9)';
                 this.clouds.forEach(c => {
-                    // Dessiner les nuages
                     ctx.beginPath();
                     ctx.arc(c.x, c.y, 40 * c.s, 0, Math.PI*2);
                     ctx.arc(c.x + 35*c.s, c.y - 15*c.s, 45*c.s, 0, Math.PI*2);
@@ -608,14 +710,11 @@
             update: function() {
                 this.clouds.forEach(c => {
                     c.x -= 0.5 * c.s;
-                    // Reset loin pour écran large
                     if(c.x < -150) c.x = LOGICAL_WIDTH + 150 + (gameOffsetX/scaleRatio)*2; 
                 });
             }
         };
 
-        // --- CORE FUNCTIONS ---
-        
         function updateLeaderboardDisplay() {
             leaderboardList.innerHTML = "";
             highScores.sort((a, b) => b.score - a.score);
@@ -649,7 +748,9 @@
         }
 
         function resetGameEnv() {
-            player.y = 300; player.velocity = 0; pipes.reset(); score = 0; frames = 0; particles = [];
+            player.y = 300; player.velocity = 0; player.hasShield = false; player.invulnerable = 0;
+            pipes.reset(); bonuses.reset();
+            score = 0; frames = 0; particles = [];
             scoreEl.innerText = score; gameState = 'START';
             scoreEl.style.display = 'block'; scoreEl.classList.remove('score-pop');
             shakeAmount = 0;
@@ -682,31 +783,28 @@
         }
 
         function loop() {
-            // Calcul tremblement
             let tx = 0, ty = 0;
             if (shakeAmount > 0) {
                 tx = (Math.random() - 0.5) * shakeAmount; ty = (Math.random() - 0.5) * shakeAmount;
                 shakeAmount *= 0.9; if(shakeAmount < 0.5) shakeAmount = 0;
             }
 
-            // --- RENDERING PIPELINE ---
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 1. Matrice Globale pour le jeu (Centrée et Scalée)
             ctx.save();
-            ctx.translate(gameOffsetX + tx, 0 + ty); // Centrer horizontalement + Shake
-            ctx.scale(scaleRatio, scaleRatio); // Mettre à l'échelle HD
+            ctx.translate(gameOffsetX + tx, 0 + ty); 
+            ctx.scale(scaleRatio, scaleRatio); 
 
-            // 2. Dessin
             background.draw();
             if (gameState === 'PLAYING' || gameState === 'DEMO') background.update();
 
             pipes.draw();
             if (gameState === 'PLAYING' || gameState === 'DEMO') pipes.update();
             
+            bonuses.draw();
+            if (gameState === 'PLAYING' || gameState === 'DEMO') bonuses.update();
+
             ground.draw();
             
-            // Particules
             for(let i=particles.length-1; i>=0; i--) {
                 particles[i].update(); particles[i].draw(ctx);
                 if(particles[i].life <= 0) particles.splice(i, 1);
@@ -716,9 +814,8 @@
             if (gameState === 'PLAYING' || gameState === 'DEMO') { player.update(); frames++; }
             else if (gameState === 'START') { player.y = 300 + Math.sin(Date.now() / 300) * 12; }
             
-            ctx.restore(); // Fin de la matrice de jeu
+            ctx.restore(); 
 
-            // 3. Effets Post-Process (Flash écran complet)
             if (flashOpacity > 0) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -731,16 +828,12 @@
         function inputAction(e) {
             resetInactivity();
             if (isHighscoreInputActive) return;
-            // Ignore boutons
             if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-            
             if(e.type !== 'click') e.preventDefault();
-            
             if (gameState === 'START') startGame();
             else if (gameState === 'PLAYING') player.jump();
         }
 
-        // Listeners
         window.addEventListener('keydown', (e) => { resetInactivity(); if (!isHighscoreInputActive && e.code === 'Space') inputAction(e); });
         window.addEventListener('mousedown', inputAction);
         window.addEventListener('touchstart', (e) => { inputAction(e); }, {passive: false});
